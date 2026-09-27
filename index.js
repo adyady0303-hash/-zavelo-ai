@@ -222,3 +222,12 @@ app.post("/api/chat", (req, res) => {
 app.listen(PORT, () => {
   console.log(`Zavelo AI rulează pe portul ${PORT}`);
 });
+  res.json({
+    reply: reply
+  });
+});
+
+// Pornirea serverului
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`Zavelo AI rulează pe portul ${PORT}`);
+});
