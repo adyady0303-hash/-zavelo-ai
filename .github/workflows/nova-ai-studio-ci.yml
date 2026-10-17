@@ -1,0 +1,20 @@
+name: NOVA AI STUDIO CI
+on:
+  push:
+    paths:
+      - 'nova-ai-studio/**'
+      - '.github/workflows/nova-ai-studio-ci.yml'
+  pull_request:
+    paths:
+      - 'nova-ai-studio/**'
+      - '.github/workflows/nova-ai-studio-ci.yml'
+jobs:
+  syntax:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: node --check nova-ai-studio/server.js
+      - run: node --check nova-ai-studio/public/index.html
