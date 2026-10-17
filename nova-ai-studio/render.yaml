@@ -1,0 +1,30 @@
+services:
+  - type: web
+    name: nova-ai-studio
+    runtime: docker
+    dockerfilePath: ./nova-ai-studio/Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/health
+    disk:
+      name: nova-data
+      mountPath: /app/data
+      sizeGB: 1
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATA_DIR
+        value: /app/data
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: APP_URL
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: STRIPE_PRICE_STARTER
+        sync: false
+      - key: STRIPE_PRICE_PRO
+        sync: false
