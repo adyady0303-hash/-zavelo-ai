@@ -1,12 +1,14 @@
 {
   "name": "nova-ai-studio",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "description": "NOVA AI STUDIO - AI workspace with subscription-ready billing",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node --watch server.js"
+    "dev": "node --watch server.js",
+    "test": "node --test",
+    "check": "node --check server.js"
   },
   "engines": { "node": ">=20" },
   "dependencies": {
