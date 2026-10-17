@@ -9,12 +9,16 @@ on:
       - 'nova-ai-studio/**'
       - '.github/workflows/nova-ai-studio-ci.yml'
 jobs:
-  syntax:
+  test:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: nova-ai-studio
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-      - run: node --check nova-ai-studio/server.js
-      - run: node --check nova-ai-studio/public/index.html
+      - run: npm install
+      - run: npm run check
+      - run: npm test
