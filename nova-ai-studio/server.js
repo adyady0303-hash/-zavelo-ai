@@ -19,7 +19,7 @@ fs.mkdirSync(DATA_DIR, { recursive: true });
 const db = new Database(path.join(DATA_DIR, "nova.sqlite"));
 db.pragma("journal_mode = WAL");
 db.pragma("foreign_keys = ON");
-db.exec(\`
+db.exec(`
  CREATE TABLE IF NOT EXISTS users (
    id INTEGER PRIMARY KEY AUTOINCREMENT,
    email TEXT NOT NULL UNIQUE,
@@ -40,7 +40,7 @@ db.exec(\`
    event_id TEXT PRIMARY KEY,
    processed_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
  );
-\`);
+`);
 const openai = process.env.OPENAI_API_KEY ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY }) : null;
 const stripe = process.env.STRIPE_SECRET_KEY ? new Stripe(process.env.STRIPE_SECRET_KEY) : null;
 const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 12, standardHeaders: "draft-7", legacyHeaders: false, message: { error: "Prea multe încercări. Încearcă din nou peste 15 minute." } });
@@ -70,9 +70,9 @@ app.post("/api/stripe/webhook", express.raw({ type: "application/json" }), (req,
     const userId = Number(obj.metadata?.userId || obj.client_reference_id);
     if (userId) {
      const subId = typeof obj.subscription === "string" ? obj.subscription : obj.subscription.id;
-     db.prepare(\`INSERT INTO subscriptions (user_id, stripe_customer_id, stripe_subscription_id, status)
+     db.prepare(`INSERT INTO subscriptions (user_id, stripe_customer_id, stripe_subscription_id, status)
        VALUES (?, ?, ?, 'incomplete')
-       ON CONFLICT(stripe_subscription_id) DO UPDATE SET user_id=excluded.user_id, stripe_customer_id=excluded.stripe_customer_id, updated_at=CURRENT_TIMESTAMP\`)
+       ON CONFLICT(stripe_subscription_id) DO UPDATE SET user_id=excluded.user_id, stripe_customer_id=excluded.stripe_customer_id, updated_at=CURRENT_TIMESTAMP`)
        .run(userId, typeof obj.customer === "string" ? obj.customer : obj.customer?.id || null, subId);
     }
    } else if (event.type.startsWith("customer.subscription.")) {
@@ -80,10 +80,10 @@ app.post("/api/stripe/webhook", express.raw({ type: "application/json" }), (req,
     const userId = Number(obj.metadata?.userId || existing?.user_id || 0);
     if (userId) {
      const item = obj.items?.data?.[0];
-     db.prepare(\`INSERT INTO subscriptions (user_id, stripe_customer_id, stripe_subscription_id, status, price_id, current_period_end)
+     db.prepare(`INSERT INTO subscriptions (user_id, stripe_customer_id, stripe_subscription_id, status, price_id, current_period_end)
        VALUES (?, ?, ?, ?, ?, ?)
        ON CONFLICT(stripe_subscription_id) DO UPDATE SET status=excluded.status, price_id=excluded.price_id,
-       current_period_end=excluded.current_period_end, stripe_customer_id=excluded.stripe_customer_id, updated_at=CURRENT_TIMESTAMP\`)
+       current_period_end=excluded.current_period_end, stripe_customer_id=excluded.stripe_customer_id, updated_at=CURRENT_TIMESTAMP`)
        .run(userId, typeof obj.customer === "string" ? obj.customer : obj.customer?.id || null, obj.id, obj.status || "unknown", item?.price?.id || null, obj.current_period_end || null);
     }
    }
