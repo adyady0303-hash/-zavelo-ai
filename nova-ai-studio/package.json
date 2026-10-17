@@ -1,8 +1,8 @@
 {
   "name": "nova-ai-studio",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "private": true,
-  "description": "NOVA AI STUDIO - AI workspace with subscription-ready billing",
+  "description": "NOVA AI STUDIO - AI workspace with accounts and subscription billing",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -12,8 +12,13 @@
   },
   "engines": { "node": ">=20" },
   "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "connect-sqlite3": "^0.9.16",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
+    "express-rate-limit": "^7.5.0",
+    "express-session": "^1.18.1",
+    "better-sqlite3": "^11.8.1",
     "openai": "^4.80.0",
     "stripe": "^17.7.0"
   }
