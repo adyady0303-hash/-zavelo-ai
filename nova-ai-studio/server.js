@@ -123,7 +123,19 @@ function activeSubscription(userId) {
 }
 
 app.get("/api/health", (_req, res) => res.json({ ok: true, app: "NOVA AI STUDIO" }));
-app.get("/api/status", (_req, res) => res.json({ ok: true, app: "NOVA AI STUDIO", aiConfigured: Boolean(process.env.OPENAI_API_KEY), stripeConfigured: Boolean(stripe), model: process.env.OPENAI_MODEL || "gpt-4o-mini" }));
+app.get("/api/status", async (_req, res) => {
+ const status = { ok: true, app: "NOVA AI STUDIO", aiConfigured: Boolean(openai), aiConnected: false, stripeConfigured: Boolean(stripe), model: process.env.OPENAI_MODEL || "gpt-4o-mini" };
+ if (openai) {
+  try {
+   await openai.models.list();
+   status.aiConnected = true;
+  } catch (error) {
+   status.aiError = error.status === 401 ? "Cheia OpenAI este invalidă." : error.status === 429 ? "Limita sau billing-ul OpenAI trebuie verificate." : "Conexiunea OpenAI nu a putut fi verificată. Verifică cheia, accesul la API și logurile serverului.";
+   console.warn("OpenAI connection check failed:", error.status || error.message);
+  }
+ }
+ res.json(status);
+});
 app.get("/api/auth/me", (req, res) => {
  const user = currentUser(req);
  res.json({ user, subscription: user ? activeSubscription(user.id) : null });
