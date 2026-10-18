@@ -21,7 +21,7 @@
 <div id="notice" class="notice" role="status"></div>
 <section id="studio" class="section"><div class="section-head"><h2>Studio-ul tău AI</h2><p>Scrie o întrebare și începe conversația.</p></div>
 <div class="workspace"><aside class="side"><h3>Instrumente</h3><button class="tool active" data-prompt="Ajută-mă să dezvolt o idee nouă de proiect." >✦ &nbsp; Asistent AI</button><button class="tool" data-prompt="Scrie un text profesional și convingător despre: ">✎ &nbsp; Scriere creativă</button><button class="tool" data-prompt="Explică-mi pas cu pas următoarea problemă: ">⌘ &nbsp; Rezolvare probleme</button><button class="tool" data-prompt="Fă un plan concret pentru următorul obiectiv: ">▤ &nbsp; Planificare</button><div class="side-note">Conversațiile sunt trimise către serverul configurat de administrator. Nu introduce date sensibile.</div></aside>
-<div class="chat"><div class="chat-top"><strong>✦ &nbsp; NOVA Assistant</strong><span class="online">● Gata de utilizare</span></div><div id="messages" class="messages" aria-live="polite"><div class="bubble bot">Bun venit la NOVA AI STUDIO! 👋<br><br>Cu ce idee te pot ajuta astăzi? Poți să-mi ceri să scriu, să explic, să planific sau să analizez o problemă.</div></div><form id="chatForm" class="composer"><textarea id="prompt" placeholder="Scrie mesajul tău aici…" aria-label="Mesaj" required maxlength="12000"></textarea><button class="btn" id="send" type="submit">Trimite ↑</button></form><div class="hint">AI-ul poate face greșeli. Verifică informațiile importante.</div></div></div></section>
+<div class="chat"><div class="chat-top"><strong>✦ &nbsp; NOVA Assistant</strong><span class="online" id="connectionStatus" role="status">● Verific conexiunea…</span></div><div id="messages" class="messages" aria-live="polite"><div class="bubble bot">Bun venit la NOVA AI STUDIO! 👋<br><br>Cu ce idee te pot ajuta astăzi? Poți să-mi ceri să scriu, să explic, să planific sau să analizez o problemă.</div></div><form id="chatForm" class="composer"><textarea id="prompt" placeholder="Scrie mesajul tău aici…" aria-label="Mesaj" required maxlength="12000"></textarea><button class="btn" id="send" type="submit">Trimite ↑</button></form><div class="hint">AI-ul poate face greșeli. Verifică informațiile importante.</div></div></div></section>
 <section id="plans" class="section"><div class="section-head"><h2>Alege planul potrivit</h2><p>Planuri pregătite pentru integrarea plăților recurente.</p></div><div class="pricing">
 <article class="plan"><span class="tag">Pentru început</span><h3>Free</h3><div class="price">€0 <small>/ lună</small></div><p>Explorează experiența NOVA.</p><ul><li>Interfață AI</li><li>Funcții de bază</li><li>Fără plată</li></ul><a class="btn ghost" href="#studio">Începe gratuit</a></article>
 <article class="plan featured"><span class="tag">Pentru utilizare regulată</span><h3>Starter</h3><div class="price">Preț configurabil</div><p>Acces extins prin abonament.</p><ul><li>Asistent AI</li><li>Plată recurentă prin Stripe</li><li>Preț definit în Stripe</li></ul><button class="btn checkout" data-plan="starter">Alege Starter</button></article>
@@ -55,11 +55,32 @@ document.querySelectorAll(".auth-tab").forEach(b=>b.addEventListener("click",()=
 accountForm.addEventListener("submit",async e=>{e.preventDefault();const submit=document.getElementById("accountSubmit");submit.disabled=true;accountMessage("");try{const r=await fetch("/api/auth/"+authMode,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:document.getElementById("accountEmail").value,password:document.getElementById("accountPassword").value})});const d=await r.json();if(!r.ok)throw new Error(d.error||"Operațiunea nu a reușit.");currentAccount=d.user;accountForm.reset();await refreshAccount();showAccount();}catch(err){accountMessage(err.message);}finally{submit.disabled=false;}});
 document.getElementById("logoutBtn").addEventListener("click",async()=>{try{const r=await fetch("/api/auth/logout",{method:"POST"});if(!r.ok)throw new Error("Deconectarea nu a reușit.");currentAccount=null;await refreshAccount();showAccount();}catch(e){accountMessage(e.message);}});
 refreshAccount();
+async function checkConnection(){
+ const status=document.getElementById("connectionStatus");
+ try {
+  const response=await fetch("/api/status",{cache:"no-store"});
+  if(!response.ok) throw new Error("Serverul NOVA a răspuns cu eroarea "+response.status+".");
+  const state=await response.json();
+  if(!state.aiConfigured){
+   status.textContent="● Server conectat · AI neconfigurat";
+   status.style.color="#fbbf24";
+   showNotice("Serverul NOVA răspunde, dar nu are OPENAI_API_KEY configurată. Adaugă cheia API în variabilele de mediu ale serverului și repornește aplicația.","error");
+  } else {
+   status.textContent="● Server și AI configurate";
+   status.style.color="#86efac";
+  }
+ } catch(error) {
+  status.textContent="● Server indisponibil";
+  status.style.color="#f87171";
+  showNotice("NOVA nu se poate conecta la serverul AI. Dacă ai deschis fișierul HTML direct, pornește aplicația Node.js sau deschide adresa publicată a serverului. Dacă aplicația este publicată, verifică logurile serverului și variabilele de mediu.","error");
+ }
+}
+checkConnection();
 const messages=document.getElementById("messages"),form=document.getElementById("chatForm"),input=document.getElementById("prompt"),send=document.getElementById("send"),notice=document.getElementById("notice");
 document.getElementById("year").textContent=new Date().getFullYear();
 function showNotice(text,type=""){notice.textContent=text;notice.className="notice show "+type;notice.scrollIntoView({behavior:"smooth",block:"nearest"});}
 function bubble(text,kind){const el=document.createElement("div");el.className="bubble "+kind;el.textContent=text;messages.appendChild(el);messages.scrollTop=messages.scrollHeight;return el;}
-form.addEventListener("submit",async e=>{e.preventDefault();const message=input.value.trim();if(!message)return;bubble(message,"user");input.value="";send.disabled=true;send.textContent="…";const pending=bubble("Generez un răspuns…","bot");try{const r=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({message})});const data=await r.json();if(!r.ok)throw new Error(data.error||"Cererea nu a putut fi procesată.");pending.textContent=data.reply||"Nu am primit un răspuns.";}catch(err){pending.textContent=err.message; }finally{send.disabled=false;send.textContent="Trimite ↑";input.focus();}});
+form.addEventListener("submit",async e=>{e.preventDefault();const message=input.value.trim();if(!message)return;bubble(message,"user");input.value="";send.disabled=true;send.textContent="…";const pending=bubble("Generez un răspuns…","bot");try{const r=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({message})});const data=await r.json();if(!r.ok)throw new Error(data.error||"Cererea nu a putut fi procesată.");pending.textContent=data.reply||"Nu am primit un răspuns.";}catch(err){pending.textContent=err.message;showNotice(err.message,"error"); }finally{send.disabled=false;send.textContent="Trimite ↑";input.focus();}});
 document.querySelectorAll(".tool").forEach(b=>b.addEventListener("click",()=>{document.querySelectorAll(".tool").forEach(x=>x.classList.remove("active"));b.classList.add("active");input.value=b.dataset.prompt;input.focus();}));
 document.querySelectorAll(".checkout").forEach(b=>b.addEventListener("click",async()=>{if(!currentAccount){showAccount();accountMessage("Autentifică-te sau creează un cont înainte de a cumpăra un abonament.");return;}b.disabled=true;const old=b.textContent;b.textContent="Se pregătește…";try{const r=await fetch("/api/create-checkout-session",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({plan:b.dataset.plan})});const data=await r.json();if(!r.ok)throw new Error(data.error||"Checkout indisponibil.");if(!data.url)throw new Error("Stripe nu a returnat o adresă de plată.");window.location.assign(data.url);}catch(e){showNotice(e.message,"error");}finally{b.disabled=false;b.textContent=old;}}));
 const params=new URLSearchParams(location.search);if(params.get("checkout")==="success")showNotice("Stripe a redirecționat înapoi după checkout. Configurează webhook-urile și verificarea abonamentului înainte să acorzi acces plătit.","success");if(params.get("checkout")==="cancelled")showNotice("Checkout-ul a fost anulat.");
