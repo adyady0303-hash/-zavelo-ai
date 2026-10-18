@@ -64,9 +64,13 @@ async function checkConnection(){
   if(!state.aiConfigured){
    status.textContent="● Server conectat · AI neconfigurat";
    status.style.color="#fbbf24";
-   showNotice("Serverul NOVA răspunde, dar nu are OPENAI_API_KEY configurată. Adaugă cheia API în variabilele de mediu ale serverului și repornește aplicația.","error");
+   showNotice("Serverul NOVA răspunde, dar lipsește OPENAI_API_KEY. Configurează cheia în variabilele de mediu ale serverului și repornește aplicația.","error");
+  } else if(!state.aiConnected){
+   status.textContent="● Cheia AI nu se conectează";
+   status.style.color="#f87171";
+   showNotice(state.aiError||"Cheia OpenAI este configurată, dar conexiunea API nu a reușit. Verifică cheia, billing-ul și accesul API.","error");
   } else {
-   status.textContent="● Server și AI configurate";
+   status.textContent="● Server și OpenAI conectate";
    status.style.color="#86efac";
   }
  } catch(error) {
