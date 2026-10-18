@@ -123,6 +123,7 @@ function activeSubscription(userId) {
 }
 
 app.get("/api/health", (_req, res) => res.json({ ok: true, app: "NOVA AI STUDIO" }));
+app.get("/api/status", (_req, res) => res.json({ ok: true, app: "NOVA AI STUDIO", aiConfigured: Boolean(process.env.OPENAI_API_KEY), stripeConfigured: Boolean(stripe), model: process.env.OPENAI_MODEL || "gpt-4o-mini" }));
 app.get("/api/auth/me", (req, res) => {
  const user = currentUser(req);
  res.json({ user, subscription: user ? activeSubscription(user.id) : null });
